@@ -7,22 +7,22 @@
   <body>
     <div class="container">
       <div id="content">
-        <div id="form">
+        <form id="form" action="/main.go" method="POST">
           <div id="form1">
             <label>SING UP</label>
-            <input id="place" type="text" placeholder=" Full name" />
-            <input id="place" type="text" placeholder=" Email" />
-            <input id="place" type=" password" placeholder=" Password" />
+            <input id="place" type="text" placeholder="Full name" />
+            <input id="place" type="email" placeholder="Email" />
+            <input id="place" type="password" placeholder="Password" />
             <input
               id="place"
               type="password"
-              placeholder=" Password Confirmation"
+              placeholder="Password Confirmation"
             />
           </div>
           <div id="form2">
-            <input id="btt" type="button" value="REGISTER" />
+            <input id="btt" type="submit" value="REGISTER" />
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </body>
