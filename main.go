@@ -5,10 +5,10 @@ import (
 )
 
 type Registry struct {
-	FullName string
-	Email    string
-	Pass     string
-	PassConf string
+	FullName string `json:"FullName"`
+	Email    string `json:"Email"`
+	Pass     string `json:"Pass"`
+	PassConf string `json:"PassConf"`
 	Errors   map[string]string
 }
 
