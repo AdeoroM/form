@@ -17,7 +17,7 @@ type User struct {
 func (u User) Valid() bool {
 	return u.FullName != "" &&
 		emailRegexp.MatchString(u.Email) &&
-		len(u.Password) > 8 &&
+		len(u.Password) >= 8 &&
 		u.Password == u.PasswordConfirmation
 }
 
@@ -52,26 +52,22 @@ func PrintFormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user.FullName == "" {
-		answer := "Please put your full name"
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, answer)
+		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Please put your full name")
 		w.Write([]byte(content))
 		return
 	}
 	if !emailRegexp.MatchString(user.Email) {
-		answer1 := "Your email is invalid"
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, answer1)
+		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Your email is invalid")
 		w.Write([]byte(content))
 		return
 	}
-	if len(user.Password) <= 8 {
-		answer2 := "Very short password"
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, answer2)
+	if len(user.Password) < 8 {
+		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Very short password")
 		w.Write([]byte(content))
 		return
 	}
 	if user.Password != user.PasswordConfirmation {
-		answer3 := "Password does not match"
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, answer3)
+		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Password does not match")
 		w.Write([]byte(content))
 		return
 	}
@@ -115,11 +111,11 @@ const errorTemplate = `
             />
           </div>
           <div id="form2">
-            <input id="btt" type="submit" value="REGISTER" />
+            <input id="btt" type="submit" value="REGISTER"/>
           </div>
 				</form>
 				<div style="border: 1px solid red; width: 100%; height: 50px;text-align: center">
-        	<h1>%v</h1>
+        	<h1>Error: %s</h1>
       	</div>
       </div>
     </div>
@@ -139,7 +135,7 @@ const success = `
 <body>
 	<div class="container">
 		<div id="content">
-			<h4>All set %v!</h4>
+			<h1>All set %v!</h1>
 		</div>
 	</div>
 </body>
