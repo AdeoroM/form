@@ -1,0 +1,51 @@
+
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <title>Form</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <div id="content">
+        <form id="form" action="/form" method="POST">
+          <div id="form1">
+            <label class="centered">SING UP</label>
+            <input
+              id="place1"
+              name="FullName"
+              type="text"
+							placeholder="Full Name"
+							value="{{.FullName}}"
+							class="{{if ne (index .Errors "FullName") "" }}error{{ end }}"
+						/>
+						<span>{{index .Errors "FullName"}}</span>
+						<input id="place2" name="Email" type="email" placeholder="Email" value="{{.Email}}" class="{{if ne (index .Errors "Email") "" }}error{{ end }}"/>
+						<span>{{index .Errors "Email"}}</span>
+            <input
+              id="place3"
+              name="Password"
+              type="password"
+							placeholder="Password"
+							value="{{.Password}}"
+							class="{{if ne (index .Errors "Password") "" }}error{{ end }}"
+						/>
+						<span>{{index .Errors "Password"}}</span>
+            <input
+              id="place4"
+              type="password"
+              name="PasswordConfirmation"
+							placeholder="Password Confirmation"
+							value="{{.PasswordConfirmation}}"
+							class="{{if ne (index .Errors "PasswordConfirmation") "" }}error{{ end }}"
+						/>
+						<span>{{index .Errors "PasswordConfirmation"}}</span>
+          </div>
+          <div id="form2">
+            <input id="btt" type="submit" value="REGISTER"/>
+          </div>
+				</form>
+      </div>
+    </div>
+  </body>
+</html>

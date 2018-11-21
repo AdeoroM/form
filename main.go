@@ -1,32 +1,48 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"regexp"
 )
 
+var emailRegexp = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
 type User struct {
-	FullName             string `Json:"FullName"`
+	FullName             string `json:"FullName"`
 	Email                string `json:"Email"`
 	Password             string `json:"Password"`
 	PasswordConfirmation string `json:"PasswordConfirmation"`
+
+	Errors map[string]string
 }
 
 func (u User) Valid() bool {
-	return u.FullName != "" &&
-		emailRegexp.MatchString(u.Email) &&
-		len(u.Password) >= 8 &&
-		u.Password == u.PasswordConfirmation
+
+	if u.FullName == "" {
+		u.Errors["FullName"] = "Please put your full name"
+	}
+
+	if !emailRegexp.MatchString(u.Email) {
+		u.Errors["Email"] = "Your email is invalid"
+	}
+
+	if len(u.Password) < 8 {
+		u.Errors["Password"] = "Very short password"
+	}
+
+	if u.Password != u.PasswordConfirmation {
+		u.Errors["PasswordConfirmation"] = "Password does not match"
+	}
+
+	return len(u.Errors) == 0
 }
 
 func main() {
 
-	//RUTA QUE SIRVA EL HTML DEL FORM
 	http.HandleFunc("/", LoginFormHandler)
-	//RUTA QUE PROCESE EL FORM
-	http.HandleFunc("/form", PrintFormHandler)
+	http.HandleFunc("/form", FormHandler)
 
 	//RUTA PARA ASSETS
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -34,9 +50,22 @@ func main() {
 }
 
 func LoginFormHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "static/index.html")
+	Render(w, "static/index.html.tmpl", User{})
 }
-func PrintFormHandler(w http.ResponseWriter, r *http.Request) {
+
+func Render(w http.ResponseWriter, tmpl string, data interface{}) {
+	t, err := template.ParseFiles(tmpl)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = t.Execute(w, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func FormHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	user := User{
@@ -44,100 +73,13 @@ func PrintFormHandler(w http.ResponseWriter, r *http.Request) {
 		Email:                r.Form.Get("Email"),
 		Password:             r.Form.Get("Password"),
 		PasswordConfirmation: r.Form.Get("PasswordConfirmation"),
+		Errors:               map[string]string{},
 	}
 
 	if user.Valid() {
-		content := fmt.Sprintf(success, user.FullName)
-		w.Write([]byte(content))
-		return
-	}
-	if user.FullName == "" {
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Please put your full name")
-		w.Write([]byte(content))
-		return
-	}
-	if !emailRegexp.MatchString(user.Email) {
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Your email is invalid")
-		w.Write([]byte(content))
-		return
-	}
-	if len(user.Password) < 8 {
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Very short password")
-		w.Write([]byte(content))
-		return
-	}
-	if user.Password != user.PasswordConfirmation {
-		content := fmt.Sprintf(errorTemplate, user.FullName, user.Email, user.Password, user.PasswordConfirmation, user.FullName, "Password does not match")
-		w.Write([]byte(content))
+		Render(w, "static/success.tmpl", user.FullName)
 		return
 	}
 
+	Render(w, "static/index.html.tmpl", user)
 }
-
-const errorTemplate = ` 
-<html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="/static/style.css" />
-    <title>Form</title>
-  </head>
-
-  <body>
-    <div class="container">
-      <div id="content">
-        <form id="form" action="/form" method="POST">
-          <div id="form1">
-            <label>SING UP</label>
-            <input
-              id="place1"
-              name="FullName"
-              type="text"
-							placeholder="Full Name"
-							value="%v"
-            />
-            <input id="place2" name="Email" type="email" placeholder="Email" value="%v"/>
-            <input
-              id="place3"
-              name="Password"
-              type="password"
-							placeholder="Password"
-							value="%v"
-            />
-            <input
-              id="place4"
-              type="password"
-              name="PasswordConfirmation"
-							placeholder="Password Confirmation"
-							value="%v"
-            />
-          </div>
-          <div id="form2">
-            <input id="btt" type="submit" value="REGISTER"/>
-          </div>
-				</form>
-				<div style="border: 1px solid red; width: 100%; height: 50px;text-align: center">
-        	<h1>Error: %s</h1>
-      	</div>
-      </div>
-    </div>
-  </body>
-</html>
-`
-
-var emailRegexp = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-
-const success = `
-<html>
-<head>
-	<link rel="stylesheet" type="text/css" href="/static/style.css" />
-	<title>Form</title>
-</head>
-
-<body>
-	<div class="container">
-		<div id="content">
-			<h1>All set %v!</h1>
-		</div>
-	</div>
-</body>
-</html>
-`
